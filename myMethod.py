@@ -22,6 +22,12 @@ def get_dataset(file_path):
     )
     return dataset
 
+# image augmentation
+# horizontal_fold
+def horizontal_fold(original):
+    augmented = tf.image.flip_left_right(original)
+    return augmented
+
 
 # parameters: bs -> batch_size
 def preprocess_traindata(feature, labels):
@@ -34,6 +40,8 @@ def preprocess_traindata(feature, labels):
     tmp_label = tf.reshape(tf.one_hot(labels[0], 7), [1, 7])
     for i in range(1, BATCH_SIZE):
         current = tf.reshape(block[i], [1, 48, 48, 1])
+        if i < BATCH_SIZE//2:
+            current = horizontal_fold(current)
         tmp_feature = tf.concat([tmp_feature, current], axis=0)
         current = tf.reshape(tf.one_hot(labels[i], 7), [1, 7])
         tmp_label = tf.concat([tmp_label, current], axis=0)

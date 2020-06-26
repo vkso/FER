@@ -112,11 +112,11 @@ def singleGPU():
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
                   metrics=["accuracy"])
-    model.fit(train_data, epochs=90, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE,
+    model.fit(train_data, epochs=TOTAL_EPOCHS, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE // GPUS,
               callbacks=[tensorboard_callback],
               validation_data=public_test_data,
-              validation_steps=TOTAL_TEST // BATCH_SIZE)
-    model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE)
+              validation_steps=TOTAL_TEST // BATCH_SIZE // GPUS)
+    model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE // GPUS)
 
 def multiGPUs():
     strategy = tf.distribute.MirroredStrategy()
@@ -125,11 +125,11 @@ def multiGPUs():
         model.compile(optimizer='adam',
                       loss='categorical_crossentropy',
                       metrics=["accuracy"])
-    model.fit(train_data, epochs=90, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE,
+    model.fit(train_data, epochs=TOTAL_EPOCHS, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE // GPUS,
               callbacks=[tensorboard_callback],
               validation_data=public_test_data,
-              validation_steps=TOTAL_TEST // BATCH_SIZE)
-    model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE)
+              validation_steps=TOTAL_TEST // BATCH_SIZE // GPUS)
+    model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE // GPUS)
 
 def trainModel(gpus):
     if gpus == 1:

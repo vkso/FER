@@ -90,13 +90,13 @@ def show_batch(dataset):
 def create_myModel():
     model = keras.models.Sequential([
         # Block 1
-        layers.Conv2D(64, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv1_1'),
-        layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_2'),
+        layers.Conv2D(64, (7, 7), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv1_1'),
+        layers.Conv2D(64, (7, 7), activation='relu', padding='same', name='conv1_2'),
         layers.BatchNormalization(),
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool1_1'),
         # Block 2
-        layers.Conv2D(128, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv2_1'),
-        layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_2'),
+        layers.Conv2D(128, (5, 5), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv2_1'),
+        layers.Conv2D(128, (5, 5), activation='relu', padding='same', name='conv2_2'),
         layers.BatchNormalization(),
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool2_1'),
         # Block 3
@@ -105,16 +105,16 @@ def create_myModel():
         layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_3'),
         layers.BatchNormalization(),
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool3_1'),
-        # Block 4
-        layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_1'),
-        layers.Conv2D(512, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv4_2'),
-        layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_3'),
-        layers.BatchNormalization(),
-        layers.MaxPooling2D(2, strides=2, padding='same', name='pool4_1'),
+#         # Block 4
+#         layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_1'),
+#         layers.Conv2D(512, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv4_2'),
+#         layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_3'),
+#         layers.BatchNormalization(),
+#         layers.MaxPooling2D(2, strides=2, padding='same', name='pool4_1'),
 
         layers.Flatten(),
-        layers.Dense(4096, activation='relu', name='fc6'),
-        layers.Dense(4096, activation='relu', name='fc7'),
+        layers.Dense(1024, activation='relu', name='fc6'),
+        layers.Dense(1024, activation='relu', name='fc7'),
         layers.BatchNormalization(),
         layers.Dense(7, activation='softmax', name='fc8')
     ])

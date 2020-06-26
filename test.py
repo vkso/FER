@@ -4,7 +4,7 @@ import myMethod as myMethod
 
 
 test_private_path = "./data/FER2013/private_test.csv"
-private_test_data = myMethod.get_dataset(test_private_path)
+private_test_data = myMethod.get_dataset_test(test_private_path)
 private_test_data = private_test_data.map(myMethod.preprocess_traindata)
 
 model = myMethod.create_myModel()

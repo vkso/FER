@@ -16,12 +16,23 @@ import random
 
 
 # parameters: bs->batch_size, lc-> label_column, ne->num_epochs
-def get_dataset(file_path):
+def get_dataset_train(file_path):
     dataset = tf.data.experimental.make_csv_dataset(
         file_path,
         batch_size=BATCH_SIZE,
         label_name=LABEL_COLUMN,
         num_epochs=NUM_EPOCHS
+    )
+    return dataset
+
+# Get Test Dataset without shuffle operation.
+def get_dataset_test(file_path):
+    dataset = tf.data.experimental.make_csv_dataset(
+        file_path,
+        batch_size=BATCH_SIZE,
+        label_name=LABEL_COLUMN,
+        num_epochs=NUM_EPOCHS,
+        shuffle=False
     )
     return dataset
 

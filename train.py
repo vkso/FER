@@ -12,9 +12,9 @@ train_file_path = "./data/FER2013/train.csv"
 test_public_path = "./data/FER2013/public_test.csv"
 test_private_path = "./data/FER2013/private_test.csv"
 
-train_data = myMethod.get_dataset(train_file_path)
-public_test_data = myMethod.get_dataset(test_public_path)
-private_test_data = myMethod.get_dataset(test_private_path)
+train_data = myMethod.get_dataset_train(train_file_path)
+public_test_data = myMethod.get_dataset_test(test_public_path)
+private_test_data = myMethod.get_dataset_test(test_private_path)
 
 train_data = train_data.map(myMethod.preprocess_traindata)
 public_test_data = public_test_data.map(myMethod.preprocess_traindata)

@@ -24,6 +24,7 @@ private_test_data = private_test_data.map(myMethod.preprocess_traindata)
 # original = tf.reshape(original, [1, 48, 48, 1])
 # print(original.shape)
 
+
 # ------------------------------------------------------------------------------
 # 四个拐角的裁切,左上、右上，左下，右下
 # left_up = original[:42, :42, :]
@@ -70,6 +71,8 @@ private_test_data = private_test_data.map(myMethod.preprocess_traindata)
 # rotated = tf.reshape(rotated, [48, 48])
 # print(rotated.shape)
 
+
+
 # def tmpvisualize(lu, ru, ld, rd, original):
 #     fig = plt.figure()
 #     plt.subplot(3, 2, 1)
@@ -104,16 +107,34 @@ private_test_data = private_test_data.map(myMethod.preprocess_traindata)
 logdir = "./logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir)
 
+def singleGPU():
+    model = myMethod.create_myModel()
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=["accuracy"])
+    model.fit(train_data, epochs=90, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE,
+              callbacks=[tensorboard_callback],
+              validation_data=public_test_data,
+              validation_steps=TOTAL_TEST // BATCH_SIZE)
+    model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE)
 
-model = myMethod.create_myModel()
+def multiGPUs():
+    strategy = tf.distribute.MirroredStrategy()
+    with strategy.scope():
+        model = myMethod.create_myModel()
+        model.compile(optimizer='adam',
+                      loss='categorical_crossentropy',
+                      metrics=["accuracy"])
+    model.fit(train_data, epochs=90, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE,
+              callbacks=[tensorboard_callback],
+              validation_data=public_test_data,
+              validation_steps=TOTAL_TEST // BATCH_SIZE)
+    model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE)
 
-model.compile(optimizer='adam',
-              loss='categorical_crossentropy',
-              metrics=["accuracy"])
+def trainModel(gpus):
+    if gpus == 1:
+        singleGPU()
+    else:
+        multiGPUs()
 
-model.fit(train_data, epochs=90, steps_per_epoch=TOTAL_TRAIN//BATCH_SIZE,
-          callbacks=[tensorboard_callback],
-          validation_data=public_test_data,
-          validation_steps=TOTAL_TEST//BATCH_SIZE)
-
-model.evaluate(private_test_data, steps=TOTAL_TEST//BATCH_SIZE)
+trainModel(GPUS)

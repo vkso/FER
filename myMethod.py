@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from tensorflow.keras import layers
 from tensorflow import keras
+import tensorflow_addons as tfa
+import random
+
 
 # parameters: bs->batch_size, lc-> label_column, ne->num_epochs
 def get_dataset(file_path):
@@ -22,6 +25,7 @@ def get_dataset(file_path):
     )
     return dataset
 
+
 # image augmentation
 # horizontal_fold
 def horizontal_fold(original):
@@ -29,7 +33,30 @@ def horizontal_fold(original):
     return augmented
 
 
-# parameters: bs -> batch_size
+def central_crop(original):
+    augmented = tf.image.central_crop(original, central_fraction=0.75)
+    augmented = tf.image.resize(augmented, [48, 48], method='bilinear')
+    return augmented
+
+
+def random_rotated(original):
+    random_angle = tf.random.uniform(shape=[], minval=-0.5, maxval=0.5)
+    rotated = tfa.image.rotate(original, angles=random_angle, interpolation="BILINEAR")
+    rotated = tf.image.central_crop(rotated, central_fraction=0.75)
+    rotated = tf.image.resize(rotated, [48, 48], method='bilinear')
+    return rotated
+
+
+def image_augmentation(original, process_type):
+    if process_type == 0:
+        augmented = horizontal_fold(original)
+    elif process_type == 1:
+        augmented = central_crop(original)
+    else:
+        augmented = random_rotated(original)
+    return augmented
+
+
 def preprocess_traindata(feature, labels):
     block = feature['pixels']
     block = tf.strings.split(block)
@@ -38,10 +65,14 @@ def preprocess_traindata(feature, labels):
 
     tmp_feature = tf.reshape(block[0], [1, 48, 48, 1])
     tmp_label = tf.reshape(tf.one_hot(labels[0], 7), [1, 7])
+    method_list = tf.random.uniform([BATCH_SIZE//2], minval=0, maxval=3, dtype=tf.int32)
     for i in range(1, BATCH_SIZE):
         current = tf.reshape(block[i], [1, 48, 48, 1])
+        # the first 1/2 part will be processed
         if i < BATCH_SIZE//2:
-            current = horizontal_fold(current)
+            operation_type = method_list[i]
+            current = image_augmentation(current, operation_type)
+
         tmp_feature = tf.concat([tmp_feature, current], axis=0)
         current = tf.reshape(tf.one_hot(labels[i], 7), [1, 7])
         tmp_label = tf.concat([tmp_label, current], axis=0)

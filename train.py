@@ -6,6 +6,7 @@ from tensorflow import keras
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_addons as tfa
+import os
 
 train_file_path = "./data/FER2013/train.csv"
 test_public_path = "./data/FER2013/public_test.csv"
@@ -103,30 +104,45 @@ private_test_data = private_test_data.map(myMethod.preprocess_traindata)
 # plt.show()
 
 # ------------------------------------------------------------------------------
-
+# TensorBoard
 logdir = "./logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir)
 
+# Save checkpoints
+checkpoint_path = "./train_history/cp-{epoch:04d}.ckpt"
+checkpoint_dir = os.path.dirname(checkpoint_path)
+cp_callback = keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_path,
+    verbose=1,
+    save_weights_only=True,
+    period=10)
+
+
 def singleGPU():
     model = myMethod.create_myModel()
+
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
                   metrics=["accuracy"])
-    model.fit(train_data, epochs=TOTAL_EPOCHS, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE // GPUS,
-              callbacks=[tensorboard_callback],
+
+    model.fit(train_data, epochs=TOTAL_EPOCHS, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE,
+              callbacks=[tensorboard_callback, cp_callback],
               validation_data=public_test_data,
-              validation_steps=TOTAL_TEST // BATCH_SIZE // GPUS)
-    model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE // GPUS)
+              validation_steps=TOTAL_TEST // BATCH_SIZE)
+    model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE)
 
 def multiGPUs():
     strategy = tf.distribute.MirroredStrategy()
+
     with strategy.scope():
         model = myMethod.create_myModel()
+
         model.compile(optimizer='adam',
                       loss='categorical_crossentropy',
                       metrics=["accuracy"])
+
     model.fit(train_data, epochs=TOTAL_EPOCHS, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE // GPUS,
-              callbacks=[tensorboard_callback],
+              callbacks=[tensorboard_callback, cp_callback],
               validation_data=public_test_data,
               validation_steps=TOTAL_TEST // BATCH_SIZE // GPUS)
     model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE // GPUS)

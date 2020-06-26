@@ -91,18 +91,18 @@ def create_myModel():
     model = keras.models.Sequential([
         # Block 1
         layers.Conv2D(64, (7, 7), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv1_1'),
-        layers.Conv2D(64, (7, 7), activation='relu', padding='same', name='conv1_2'),
+        layers.Conv2D(64, (7, 7), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv1_2'),
         layers.BatchNormalization(),
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool1_1'),
         # Block 2
         layers.Conv2D(128, (5, 5), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv2_1'),
-        layers.Conv2D(128, (5, 5), activation='relu', padding='same', name='conv2_2'),
+        layers.Conv2D(128, (5, 5), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv2_2'),
         layers.BatchNormalization(),
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool2_1'),
         # Block 3
-        layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_1'),
+        layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_1'),
         layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_2'),
-        layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_3'),
+        layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_3'),
         layers.BatchNormalization(),
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool3_1'),
 #         # Block 4
@@ -114,6 +114,7 @@ def create_myModel():
 
         layers.Flatten(),
         layers.Dense(1024, activation='relu', name='fc6'),
+        layers.Dropout(0.3),
         layers.Dense(1024, activation='relu', name='fc7'),
         layers.BatchNormalization(),
         layers.Dense(7, activation='softmax', name='fc8')

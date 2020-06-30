@@ -49,6 +49,19 @@ def central_crop(original):
     augmented = tf.image.resize(augmented, [48, 48], method='bilinear')
     return augmented
 
+def corner_crop(original):
+    position = tf.random.uniform([], minval=0, maxval=4, dtype=tf.int32)
+    if position == 0:
+        augmented = original[:, :42, :42, :]
+    elif position == 1:
+        augmented = original[:, :42, 6:, :]
+    elif position == 2:
+        augmented = original[:, 6:, :42, :]
+    else:
+        augmented = original[:, 6:, 6:, :]
+    augmented = tf.image.resize(augmented, [48, 48], method='bilinear')
+    return augmented
+
 
 def random_rotated(original):
     random_angle = tf.random.uniform(shape=[], minval=-0.5, maxval=0.5)
@@ -58,14 +71,22 @@ def random_rotated(original):
     return rotated
 
 
-def image_augmentation(original, process_type):
+def image_process(original, process_type):
     if process_type == 0:
         augmented = horizontal_fold(original)
     elif process_type == 1:
         augmented = central_crop(original)
+    elif process_type == 2:
+        augmented = corner_crop(original)
     else:
         augmented = random_rotated(original)
     return augmented
+
+def image_augmentation(current, index, method_list):
+    if index < BATCH_SIZE // 2:
+        operation_type = method_list[index]
+        current = image_process(current, operation_type)
+    return current
 
 
 def preprocess_traindata(feature, labels):
@@ -76,13 +97,14 @@ def preprocess_traindata(feature, labels):
 
     tmp_feature = tf.reshape(block[0], [1, 48, 48, 1])
     tmp_label = tf.reshape(tf.one_hot(labels[0], 7), [1, 7])
-    method_list = tf.random.uniform([BATCH_SIZE//2], minval=0, maxval=3, dtype=tf.int32)
+    method_list = tf.random.uniform([BATCH_SIZE//2], minval=0, maxval=4, dtype=tf.int32)
     for i in range(1, BATCH_SIZE):
         current = tf.reshape(block[i], [1, 48, 48, 1])
         # the first 1/2 part will be processed
-        if i < BATCH_SIZE//2:
-            operation_type = method_list[i]
-            current = image_augmentation(current, operation_type)
+#         if i < BATCH_SIZE//2:
+#             operation_type = method_list[i]
+#             current = image_process(current, operation_type)
+        current = image_augmentation(current, i, method_list)
 
         tmp_feature = tf.concat([tmp_feature, current], axis=0)
         current = tf.reshape(tf.one_hot(labels[i], 7), [1, 7])
@@ -100,21 +122,49 @@ def show_batch(dataset):
 
 def create_myModel():
     model = keras.models.Sequential([
+#         # Block 1
+#         layers.Conv2D(64, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv1_1'),
+#         # layers.Conv2D(64, (7, 7), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv1_2'),
+#         layers.BatchNormalization(),
+#         layers.MaxPooling2D(2, strides=2, padding='same', name='pool1_1'),
+#         # Block 2
+#         layers.Conv2D(128, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv2_1'),
+#         # layers.Conv2D(128, (5, 5), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv2_2'),
+#         layers.BatchNormalization(),
+#         layers.MaxPooling2D(2, strides=2, padding='same', name='pool2_1'),
+#         # Block 3
+#         layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_1'),
+#         # layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_2'),
+#         # layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_3'),
+#         layers.BatchNormalization(),
+#         layers.MaxPooling2D(2, strides=2, padding='same', name='pool3_1'),
+# #         # Block 4
+# #         layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_1'),
+# #         layers.Conv2D(512, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv4_2'),
+# #         layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_3'),
+# #         layers.BatchNormalization(),
+# #         layers.MaxPooling2D(2, strides=2, padding='same', name='pool4_1'),
+
         # Block 1
-        layers.Conv2D(64, (7, 7), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv1_1'),
-        layers.Conv2D(64, (7, 7), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv1_2'),
         layers.BatchNormalization(),
+        layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_1'),
+        # layers.Conv2D(64, (7, 7), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv1_2'),
+
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool1_1'),
         # Block 2
-        layers.Conv2D(128, (5, 5), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv2_1'),
-        layers.Conv2D(128, (5, 5), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv2_2'),
         layers.BatchNormalization(),
+        layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_1'),
+        # layers.Conv2D(128, (5, 5), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv2_2'),
+
+
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool2_1'),
         # Block 3
-        layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_1'),
-        layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_2'),
-        layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_3'),
         layers.BatchNormalization(),
+        layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_1'),
+        # layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_2'),
+        # layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_3'),
+
+
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool3_1'),
 #         # Block 4
 #         layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_1'),
@@ -123,11 +173,17 @@ def create_myModel():
 #         layers.BatchNormalization(),
 #         layers.MaxPooling2D(2, strides=2, padding='same', name='pool4_1'),
 
+
+
+
+
+
         layers.Flatten(),
         layers.Dense(1024, activation='relu', name='fc6'),
-        layers.Dropout(0.3),
-        layers.Dense(1024, activation='relu', name='fc7'),
-        layers.BatchNormalization(),
+        layers.Dropout(0.5),
+        # layers.Dense(1024, activation='relu', name='fc7'),
+        # layers.Dropout(0.5),
+        # layers.BatchNormalization(),
         layers.Dense(7, activation='softmax', name='fc8')
     ])
     return model

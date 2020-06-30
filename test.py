@@ -12,7 +12,7 @@ model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
                   metrics=["accuracy"])
 
-for i in range(10, 81, 10):
+for i in range(10, TOTAL_EPOCHS, 10):
     load_path = './train_history/cp-'+ str(i).zfill(4) + '.ckpt'
 
     model.load_weights(load_path)

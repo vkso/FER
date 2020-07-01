@@ -17,13 +17,13 @@ public_test_data = myMethod.get_dataset_test(test_public_path)
 private_test_data = myMethod.get_dataset_test(test_private_path)
 
 train_data = train_data.map(myMethod.preprocess_traindata)
-public_test_data = public_test_data.map(myMethod.preprocess_traindata)
-private_test_data = private_test_data.map(myMethod.preprocess_traindata)
+public_test_data = public_test_data.map(myMethod.preprocess_testdata)
+private_test_data = private_test_data.map(myMethod.preprocess_testdata)
 
-xxx = next(iter(public_test_data))
-original = xxx[0][1]
-original = tf.reshape(original, [1, 48, 48, 1])
-print(original.shape)
+# xxx = next(iter(public_test_data))
+# original = xxx[0][1]
+# original = tf.reshape(original, [1, 48, 48, 1])
+# print(original.shape)
 
 
 # ------------------------------------------------------------------------------
@@ -64,7 +64,8 @@ logdir = "./logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir)
 
 # Save checkpoints
-checkpoint_path = "./train_history/cp-{epoch:04d}.ckpt"
+# checkpoint_path = "./train_history/cp-{epoch:04d}.ckpt"
+checkpoint_path = "./cccf/cp-{epoch:04d}.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
 cp_callback = keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_path,
@@ -90,7 +91,7 @@ def multiGPUs():
     strategy = tf.distribute.MirroredStrategy()
 
     with strategy.scope():
-        model = myMethod.create_myModel()
+        model = myMethod.create_myVGG()
 
         model.compile(optimizer='adam',
                       loss='categorical_crossentropy',

@@ -24,6 +24,14 @@ private_test_data = private_test_data.map(myMethod.preprocess_testdata)
 # original = xxx[0][1]
 # original = tf.reshape(original, [1, 48, 48, 1])
 # print(original.shape)
+#
+# after = tf.image.random_crop(original, size=[1, 42, 42, 1])
+# print(after.shape)
+# original = tf.reshape(original, [48, 48])
+# after = tf.reshape(after, [42, 42])
+#
+# myMethod.visualize(original, after)
+# plt.show()
 
 
 # ------------------------------------------------------------------------------
@@ -64,18 +72,19 @@ logdir = "./logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir)
 
 # Save checkpoints
-# checkpoint_path = "./train_history/cp-{epoch:04d}.ckpt"
-checkpoint_path = "./cccf/cp-{epoch:04d}.ckpt"
+checkpoint_path = "./train_history/cp-{epoch:04d}.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
 cp_callback = keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_path,
     verbose=1,
     save_weights_only=True,
-    period=10)
+    save_best_only=True)
+    # period=10)
+
 
 
 def singleGPU():
-    model = myMethod.create_myModel()
+    model = myMethod.create_myVGG()
 
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',

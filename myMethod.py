@@ -183,6 +183,7 @@ def show_batch(dataset):
 
 def create_myModel():
     model = keras.models.Sequential([
+        keras.Input(shape=(48, 48, 1)),
         # Block 1
         layers.BatchNormalization(),
         layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_1'),
@@ -217,73 +218,74 @@ def create_myModel():
 
 def create_myVGG():
     model = keras.models.Sequential([
+        keras.Input(shape=(48, 48, 1)),
         # block1
         layers.Conv2D(64, (3, 3), activation='relu', padding='same',
                       name='conv1_1'),
         layers.BatchNormalization(),
         layers.Conv2D(64, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
-        layers.MaxPooling2D(2, strides=2, padding='same', name='pool3_1'),
+                      name='conv1_2'),
+        layers.MaxPooling2D(2, strides=2, padding='same', name='pool1_1'),
 
         # block2
         layers.BatchNormalization(),
         layers.Conv2D(128, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
+                      name='conv2_1'),
         layers.BatchNormalization(),
         layers.Conv2D(128, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
-        layers.MaxPooling2D(2, strides=2, padding='same', name='pool3_1'),
+                      name='conv2_2'),
+        layers.MaxPooling2D(2, strides=2, padding='same', name='pool2_1'),
 
         # block3
         layers.BatchNormalization(),
         layers.Conv2D(256, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
+                      name='conv3_1'),
         layers.BatchNormalization(),
         layers.Conv2D(256, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
+                      name='conv3_2'),
         layers.BatchNormalization(),
         layers.Conv2D(256, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
+                      name='conv3_3'),
         layers.BatchNormalization(),
         layers.Conv2D(256, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
+                      name='conv3_4'),
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool3_1'),
 
         # block4
         layers.BatchNormalization(),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
+                      name='conv4_1'),
         layers.BatchNormalization(),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
+                      name='conv4_2'),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
+                      name='conv4_3'),
         layers.BatchNormalization(),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
-        layers.MaxPooling2D(2, strides=2, padding='same', name='pool3_1'),
+                      name='conv4_4'),
+        layers.MaxPooling2D(2, strides=2, padding='same', name='pool4_1'),
 
         # block5
         layers.BatchNormalization(),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
+                      name='conv5_1'),
         layers.BatchNormalization(),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
+                      name='conv5_2'),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
+                      name='conv5_3'),
         layers.BatchNormalization(),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
-                      name='conv1_1'),
+                      name='conv5_4'),
         layers.BatchNormalization(),
-        layers.MaxPooling2D(2, strides=2, padding='same', name='pool3_1'),
+        layers.MaxPooling2D(2, strides=2, padding='same', name='pool5_1'),
 
         layers.AveragePooling2D(pool_size=1, strides=1),
 
         layers.Flatten(),
-        layers.Dense(2048, activation='relu', name='fc6'),
+        layers.Dense(512, activation='relu', name='fc1'),
         layers.Dropout(0.5),
-        layers.Dense(7, activation='softmax', name='fc8')
+        layers.Dense(7, activation='softmax', name='fc2')
 
     ])
     return model

@@ -16,8 +16,6 @@ print(type(correct_answer))
 print(correct_answer.shape)
 print(correct_answer)
 # correct_answer = correct_answer.repeat(10)
-print(correct_answer.shape)
-print(correct_answer)
 
 model = myMethod.create_myVGG()
 model.compile(optimizer='adam',
@@ -31,44 +29,40 @@ model.compile(optimizer='adam',
 # print(original.shape)
 # print(emotion.shape)
 
+# for i in range(10, 601, 10):
+#     load_path = './train_history/cp-'+ str(i).zfill(4) + '.ckpt'
+#     model.load_weights(load_path)
+#     x = model.predict(private_test_data,
+#                       steps=TOTAL_TEST // BATCH_SIZE)
+#     predict_result = np.zeros(shape=(3589, 7))
+#     for i in range(0, 3589):
+#         sum = np.zeros(shape=(1, 7))
+#         for j in range(0, 10):
+#             sum += x[10*i+j]
+#         predict_result[i] = sum
+#     y = np.argmax(predict_result, axis=1)
+#     z = y - correct_answer
+#     sum = np.sum(z == 0)
+#
+#     print('sum: {}'.format(sum))
+#     print('acc: {}'.format(sum/3589))
 
-load_path = '/Users/wyc/Downloads/cp-0110.ckpt'
+
+# load_path = './train_history/cp-'+ str(i).zfill(4) + '.ckpt'
+load_path = '/Users/wyc/Downloads/cp-0560.ckpt'
 model.load_weights(load_path)
-
-# loss, acc = model.evaluate(private_test_data,
-#                            steps=TOTAL_TEST // BATCH_SIZE)
-# print(loss, acc)
-
 x = model.predict(private_test_data,
                   steps=TOTAL_TEST // BATCH_SIZE)
-print(x.shape)
-print(type(x))
-
 predict_result = np.zeros(shape=(3589, 7))
 for i in range(0, 3589):
     sum = np.zeros(shape=(1, 7))
     for j in range(0, 10):
         sum += x[10*i+j]
     predict_result[i] = sum
-
-print(predict_result)
-print(predict_result.shape)
-
-
 y = np.argmax(predict_result, axis=1)
-print(y.shape)
-print(y)
-
-
 z = y - correct_answer
 sum = np.sum(z == 0)
 
 print('sum: {}'.format(sum))
 print('acc: {}'.format(sum/3589))
-# print(tf.argmax(emotion, axis=1))
-
-
-# # original = tf.reshape(original, [48, 48])
-# # myMethod.visualize(original, original)
-# # plt.show()
 

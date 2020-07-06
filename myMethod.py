@@ -13,6 +13,8 @@ from tensorflow.keras import layers
 from tensorflow import keras
 import tensorflow_addons as tfa
 import random
+import io
+import seaborn as sn
 
 
 # parameters: bs->batch_size, lc-> label_column, ne->num_epochs
@@ -185,24 +187,23 @@ def create_myModel():
     model = keras.models.Sequential([
         keras.Input(shape=(48, 48, 1)),
         # Block 1
-        layers.BatchNormalization(),
         layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_1'),
         # layers.Conv2D(64, (7, 7), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv1_2'),
+        layers.BatchNormalization(),
 
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool1_1'),
         # Block 2
-        layers.BatchNormalization(),
         layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_1'),
         # layers.Conv2D(128, (5, 5), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv2_2'),
+        layers.BatchNormalization(),
 
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool2_1'),
 
 
         # Block 3
-        layers.BatchNormalization(),
         layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_1'),
         # layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_2'),
-
+        layers.BatchNormalization(),
 
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool3_1'),
         # --------------------Full conact layer --------------------------------
@@ -280,7 +281,7 @@ def create_myVGG():
         layers.BatchNormalization(),
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool5_1'),
 
-        layers.AveragePooling2D(pool_size=1, strides=1),
+        layers.AveragePooling2D(pool_size=1, strides=1, name='ap2d'),
 
         layers.Flatten(),
         layers.Dense(512, activation='relu', name='fc1'),
@@ -300,4 +301,16 @@ def visualize(original, augmented):
     plt.subplot(1, 2, 2)
     plt.title('Augmented Image')
     plt.imshow(augmented, cmap='gray')
+
+
+def plot_heat_map(array):
+    np_array = np.around(
+        array.astype('int') / array.sum(axis=1)[:, np.newaxis],
+        decimals=2)
+    ax = sn.heatmap(np_array, annot=True, cmap='YlGnBu',
+                    xticklabels=CLASS_NAMES,
+                    yticklabels=CLASS_NAMES)
+    plt.xticks(rotation=45)
+    plt.yticks(rotation=45)
+    plt.show()
 

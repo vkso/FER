@@ -61,6 +61,8 @@ def tmpvisualize(lu, ru, ld, rd, original):
     plt.title('Augmented Image')
     plt.imshow(original, cmap='gray')
 
+
+
 # tmpvisualize(left_up, right_up, left_down, right_down, original)
 # plt.show()
 # myMethod.visualize(original, right_down)
@@ -78,17 +80,18 @@ cp_callback = keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_path,
     verbose=1,
     save_weights_only=True,
-    save_best_only=True)
-    # period=10)
+    # save_best_only=True)
+    period=10)
 
 
 
 def singleGPU():
-    model = myMethod.create_myVGG()
+    model = myMethod.create_myModel()
 
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
                   metrics=["accuracy"])
+    model.summary()
 
     model.fit(train_data, epochs=TOTAL_EPOCHS, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE,
               callbacks=[tensorboard_callback, cp_callback],

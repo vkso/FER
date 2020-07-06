@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from keras import models
 from keras import backend as K
+import cv2
 
 
 test_private_path = "./data/FER2013/private_test.csv"
@@ -74,11 +75,13 @@ def generate_pattern(layer_name, filter_index, size=visual_size):
     iterate = K.function([model.input], [loss, grads])
 
     # We start from a gray image with some noise
-    input_img_data = np.random.random((1, size, size, 1)) * 20 + 128.
+    np.random.seed(1314)
+    # input_img_data = np.random.random((1, size, size, 1)) * 20 + 128.
+    input_img_data = np.random.random((1, size, size, 1))
 
     # Run gradient ascent for 40 steps
     step = 1.
-    for i in range(40):
+    for i in range(50):
         loss_value, grads_value = iterate([input_img_data])
         input_img_data += grads_value * step
 
@@ -91,39 +94,41 @@ def generate_pattern(layer_name, filter_index, size=visual_size):
 
 def show_kernel(layer_name, kernel_nums):
     for i in range(kernel_nums):
-        plt.subplot(2, 5, i + 1)
+        plt.subplot(4, 16, i + 1)
         x = tf.reshape(generate_pattern(layer_name, i), [visual_size, visual_size])
         plt.imshow(x, cmap='gray')
+        # plt.imshow(x)
         # plt.show()
 
-# show_kernel(layer_name='conv5_1', kernel_nums=10)
+# show_kernel(layer_name='conv1_1', kernel_nums=64)
 # plt.show()
 # ------------------------------------------------------------------------------
 
-for layer_name in ['conv1_1', 'conv2_1', 'conv3_1', 'conv4_1']:
-    size = 48
-    margin = 5
-
-    # This a empty (black) image where we will store our results.
-    results = np.zeros((8 * size + 7 * margin, 8 * size + 7 * margin, 1))
-
-    for i in range(8):  # iterate over the rows of our results grid
-        for j in range(8):  # iterate over the columns of our results grid
-            # Generate the pattern for filter `i + (j * 8)` in `layer_name`
-            filter_img = generate_pattern(layer_name, i + (j * 8), size=size)
-
-            # Put the result in the square `(i, j)` of the results grid
-            horizontal_start = i * size + i * margin
-            horizontal_end = horizontal_start + size
-            vertical_start = j * size + j * margin
-            vertical_end = vertical_start + size
-            results[horizontal_start: horizontal_end, vertical_start: vertical_end, :] = filter_img
-
-    # Display the results grid
-    plt.figure(figsize=(20, 20))
-    results = tf.reshape(results, [419, 419])
-    plt.imshow(results)
-    plt.show()
+# show filter in different layers
+# for layer_name in ['conv1_1', 'conv2_1', 'conv3_1', 'conv4_1']:
+#     size = 48
+#     margin = 5
+#
+#     # This a empty (black) image where we will store our results.
+#     results = np.zeros((8 * size + 7 * margin, 8 * size + 7 * margin, 1))
+#
+#     for i in range(8):  # iterate over the rows of our results grid
+#         for j in range(8):  # iterate over the columns of our results grid
+#             # Generate the pattern for filter `i + (j * 8)` in `layer_name`
+#             filter_img = generate_pattern(layer_name, i + (j * 8), size=size)
+#
+#             # Put the result in the square `(i, j)` of the results grid
+#             horizontal_start = i * size + i * margin
+#             horizontal_end = horizontal_start + size
+#             vertical_start = j * size + j * margin
+#             vertical_end = vertical_start + size
+#             results[horizontal_start: horizontal_end, vertical_start: vertical_end, :] = filter_img
+#
+#     # Display the results grid
+#     plt.figure(figsize=(20, 20))
+#     results = tf.reshape(results, [419, 419])
+#     plt.imshow(results)
+#     plt.show()
 
 
 
@@ -134,14 +139,14 @@ for layer_name in ['conv1_1', 'conv2_1', 'conv3_1', 'conv4_1']:
 
 
 
-#
+
 # first_layer_activation = activations[1]
 # print(first_layer_activation.shape)
 # plt.matshow(first_layer_activation[0, :, :, 0], cmap='viridis')
 # plt.show()
 
 # layer_names = []
-# for layer in model.layers[:10]:
+# for layer in model.layers[:1]:
 #     layer_names.append(layer.name)
 # print(layer_names)
 #
@@ -174,7 +179,36 @@ for layer_name in ['conv1_1', 'conv2_1', 'conv3_1', 'conv4_1']:
 #                         scale * display_grid.shape[0]))
 #     plt.title(layer_name)
 #     plt.grid(False)
-#     plt.imshow(display_grid, aspect='auto', cmap='viridis')
+#     # plt.imshow(display_grid, aspect='auto', cmap='viridis')
+#     plt.imshow(display_grid, aspect='auto', cmap='gray')
 #
 # plt.show()
+
+emotion_result = model.predict(original)
+print(emotion_result)
+true_index = np.argmax(emotion_result)
+print(true_index)
+
+
+out = model.output[:, true_index]
+last_conv_layer = model.get_layer('conv1_2')
+grads = K.gradients(out, last_conv_layer.output)[0]
+pooled_grads = K.mean(grads, axis=(0, 1, 2))
+iterate = K.function([model.input], [pooled_grads, last_conv_layer.output[0]])
+pooled_grads_value, conv_layer_output_value = iterate([original])
+for i in range(64):
+    conv_layer_output_value[:, :, i] *= pooled_grads_value[i]
+
+heatmap = np.mean(conv_layer_output_value, axis=-1)
+
+heatmap = np.maximum(heatmap, 0)
+heatmap /= np.max(heatmap)
+plt.matshow(heatmap)
+plt.show()
+
+heatmap = cv2.resize(heatmap, (48, 48))
+heatmap = np.uint8(255 * heatmap)
+heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+
+cv2.imwrite('./heatmap.jpg', heatmap)
 

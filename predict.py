@@ -3,6 +3,8 @@ from customParameters import *
 import myMethod as myMethod
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sn
 
 
 test_private_path = "./data/FER2013/private_test.csv"
@@ -52,7 +54,7 @@ model.compile(optimizer='adam',
 load_path = '/Users/wyc/Downloads/cp-0560.ckpt'
 model.load_weights(load_path)
 x = model.predict(private_test_data,
-                  steps=TOTAL_TEST // BATCH_SIZE)
+                  steps=TOTAL_TEST // BATCH_SIZE_TEST_DA)
 predict_result = np.zeros(shape=(3589, 7))
 for i in range(0, 3589):
     sum = np.zeros(shape=(1, 7))
@@ -66,3 +68,8 @@ sum = np.sum(z == 0)
 print('sum: {}'.format(sum))
 print('acc: {}'.format(sum/3589))
 
+cm = tf.math.confusion_matrix(y, correct_answer)
+print(type(cm))
+cm_array = cm.numpy()
+
+myMethod.plot_heat_map(cm_array)

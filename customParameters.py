@@ -3,6 +3,8 @@ LABEL_COLUMN = 'emotion'
 CATEGORIES = {'Usage' : ['Training', 'PublicTest', 'PrivateTest']}
 EMOTION_NAMES = {0 : 'anger', 1 : 'disgust', 2 : 'fear',
                  3 : 'happy', 4 : 'sad', 5 : 'surprised', 6 : 'normal'}
+CLASS_NAMES = ['anger', 'disgust', 'fear', 'happy', 'sad',
+               'surprised', 'normal']
 GPUS = 1
 BATCH_SIZE = 37 * GPUS
 BATCH_SIZE_TEST_DA = 37 * GPUS

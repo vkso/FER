@@ -2,11 +2,17 @@ import myMethod as myMethod
 from datetime import datetime
 from customParameters import *
 from tensorflow import keras
-# show tensor image
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import tensorflow_addons as tfa
 import os
+import argparse
+
+parser = argparse.ArgumentParser(description='train args')
+parser.add_argument('--gups', type=int, default=1)
+parser.add_argument('--model', type=str, default='myModel')
+
+args = parser.parse_args()
+
 
 train_file_path = "./data/FER2013/train.csv"
 test_public_path = "./data/FER2013/public_test.csv"
@@ -86,39 +92,47 @@ cp_callback = keras.callbacks.ModelCheckpoint(
 
 
 def singleGPU():
-    model = myMethod.create_myModel()
+    if args.model == 'myVGG':
+        model = myMethod.create_myVGG()
+    else:
+        model = myMethod.create_myModel()
 
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
                   metrics=["accuracy"])
     model.summary()
 
-    model.fit(train_data, epochs=TOTAL_EPOCHS, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE,
+    model.fit(train_data, epochs=TOTAL_EPOCHS, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE_TRAIN,
               callbacks=[tensorboard_callback, cp_callback],
               validation_data=public_test_data,
-              validation_steps=TOTAL_TEST // BATCH_SIZE)
-    model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE)
+              validation_steps=TOTAL_TEST // BATCH_SIZE_TRAIN)
+    model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE_TRAIN)
 
 def multiGPUs():
+    GPUS = args.gups
     strategy = tf.distribute.MirroredStrategy()
 
     with strategy.scope():
-        model = myMethod.create_myVGG()
+        if args.model == 'myVGG':
+            model = myMethod.create_myVGG()
+        else:
+            model = myMethod.create_myModel()
 
         model.compile(optimizer='adam',
                       loss='categorical_crossentropy',
                       metrics=["accuracy"])
 
-    model.fit(train_data, epochs=TOTAL_EPOCHS, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE // GPUS,
+    model.fit(train_data, epochs=TOTAL_EPOCHS, steps_per_epoch=TOTAL_TRAIN // BATCH_SIZE_TRAIN // GPUS,
               callbacks=[tensorboard_callback, cp_callback],
               validation_data=public_test_data,
-              validation_steps=TOTAL_TEST // BATCH_SIZE // GPUS)
-    model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE // GPUS)
+              validation_steps=TOTAL_TEST // BATCH_SIZE_TRAIN // GPUS)
+    model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE_TRAIN // GPUS)
 
-def trainModel(gpus):
-    if gpus == 1:
+def trainModel():
+    if args.gups == 1:
         singleGPU()
     else:
         multiGPUs()
 
-trainModel(GPUS)
+if __name__ == '__main__':
+    trainModel()

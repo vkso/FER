@@ -21,7 +21,7 @@ import seaborn as sn
 def get_dataset_train(file_path):
     dataset = tf.data.experimental.make_csv_dataset(
         file_path,
-        batch_size=BATCH_SIZE,
+        batch_size=BATCH_SIZE_TRAIN,
         label_name=LABEL_COLUMN,
         num_epochs=NUM_EPOCHS
     )
@@ -31,7 +31,7 @@ def get_dataset_train(file_path):
 def get_dataset_test(file_path):
     dataset = tf.data.experimental.make_csv_dataset(
         file_path,
-        batch_size=BATCH_SIZE,
+        batch_size=BATCH_SIZE_TEST_DA,
         label_name=LABEL_COLUMN,
         num_epochs=NUM_EPOCHS,
         shuffle=False
@@ -79,7 +79,7 @@ def image_process(original, process_type):
 
 
 def image_augmentation(current, index, method_list):
-    if index < BATCH_SIZE // 2:
+    if index < BATCH_SIZE_TRAIN // 2:
         operation_type = method_list[index]
         current = image_process(current, operation_type)
     return current
@@ -93,8 +93,8 @@ def preprocess_traindata(feature, labels):
 
     tmp_feature = tf.reshape(block[0], [1, 48, 48, 1])
     tmp_label = tf.reshape(tf.one_hot(labels[0], 7), [1, 7])
-    method_list = tf.random.uniform([BATCH_SIZE//2], minval=0, maxval=4, dtype=tf.int32)
-    for i in range(1, BATCH_SIZE):
+    method_list = tf.random.uniform([BATCH_SIZE_TRAIN//2], minval=0, maxval=4, dtype=tf.int32)
+    for i in range(1, BATCH_SIZE_TRAIN):
         current = tf.reshape(block[i], [1, 48, 48, 1])
         current = image_augmentation(current, i, method_list)
 
@@ -114,7 +114,7 @@ def preprocess_testdata(feature, labels):
     tmp_feature = tf.reshape(block[0], [1, 48, 48, 1])
     tmp_label = tf.reshape(tf.one_hot(labels[0], 7), [1, 7])
 
-    for i in range(1, BATCH_SIZE):
+    for i in range(1, BATCH_SIZE_TEST_DA):
         current = tf.reshape(block[i], [1, 48, 48, 1])
         tmp_feature = tf.concat([tmp_feature, current], axis=0)
         current = tf.reshape(tf.one_hot(labels[i], 7), [1, 7])

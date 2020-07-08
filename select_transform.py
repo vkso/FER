@@ -39,11 +39,6 @@ for i in range(1, 3590):
         dataset[i][1][index] = int(val)
     dataset[i][1] = np.reshape(dataset[i][1], (48, 48))
 
-print(dataset[1])
-
-
-# plt.imshow(dataset[3][1], cmap='gray')
-# plt.show()
 
 def save_jpg_file():
     for i in range(1, 3590):

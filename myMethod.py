@@ -303,7 +303,10 @@ def visualize(original, augmented):
     plt.imshow(augmented, cmap='gray')
 
 
-def plot_heat_map(array):
+# plot confusion matrix of predict and groundTruth
+def plot_heat_map(predicted, groundTruth):
+    cm = tf.math.confusion_matrix(predicted, groundTruth)
+    array = cm.numpy()
     np_array = np.around(
         array.astype('int') / array.sum(axis=1)[:, np.newaxis],
         decimals=2)

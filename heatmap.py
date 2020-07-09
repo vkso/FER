@@ -41,7 +41,7 @@ model.build(input_shape)
 model.summary()
 
 
-
+# ----------------------- show kernel layer ------------------------------------
 def deprocess_image(x):
     # normalize tensor: center on 0., ensure std is 0.1
     x -= x.mean()
@@ -56,9 +56,9 @@ def deprocess_image(x):
     x *= 255
     x = np.clip(x, 0, 255).astype('uint8')
     return x
-
-
-visual_size = 60
+#
+#
+visual_size = 120
 def generate_pattern(layer_name, filter_index, size=visual_size):
     # Build a loss function that maximizes the activation
     # of the nth filter of the layer considered.
@@ -87,21 +87,21 @@ def generate_pattern(layer_name, filter_index, size=visual_size):
 
     img = input_img_data[0]
     return deprocess_image(img)
-
-# x = tf.reshape(generate_pattern('conv2_1', 0), [120, 120])
+#
+# x = tf.reshape(generate_pattern('conv2_1', 0), [visual_size, visual_size])
 # plt.imshow(x, cmap='gray')
 # plt.show()
-
+#
 def show_kernel(layer_name, kernel_nums):
     for i in range(kernel_nums):
         plt.subplot(4, 16, i + 1)
         x = tf.reshape(generate_pattern(layer_name, i), [visual_size, visual_size])
         plt.imshow(x, cmap='gray')
-        # plt.imshow(x)
-        # plt.show()
-
-# show_kernel(layer_name='conv1_1', kernel_nums=64)
-# plt.show()
+    plt.show()
+#
+# # show_kernel(layer_name='conv1_1', kernel_nums=64)
+# --------------------------- show kernel layer end ----------------------------
+print('-' * 80)
 # ------------------------------------------------------------------------------
 
 # show filter in different layers
@@ -127,88 +127,101 @@ def show_kernel(layer_name, kernel_nums):
 #     # Display the results grid
 #     plt.figure(figsize=(20, 20))
 #     results = tf.reshape(results, [419, 419])
+#     plt.title(layer_name)
+#     plt.axis('off')
 #     plt.imshow(results)
 #     plt.show()
 
 
 
-
-# layer_outputs = [layer.output for layer in model.layers[:10]]
-# activation_model = tf.keras.models.Model(inputs=model.input, outputs=layer_outputs)
-# activations = activation_model.predict(original)
-
-
+# show conv results of different layers
+layer_outputs = [layer.output for layer in model.layers[:33]]
+activation_model = tf.keras.models.Model(inputs=model.input, outputs=layer_outputs)
+activations = activation_model.predict(original)
 
 
-# first_layer_activation = activations[1]
-# print(first_layer_activation.shape)
-# plt.matshow(first_layer_activation[0, :, :, 0], cmap='viridis')
-# plt.show()
-
-# layer_names = []
-# for layer in model.layers[:1]:
-#     layer_names.append(layer.name)
-# print(layer_names)
-#
-# images_per_row = 16
-#
-# for layer_name, layer_activation in zip(layer_names, activations):
-#     n_features = layer_activation.shape[-1]
-#
-#     size = layer_activation.shape[1]
-#
-#     n_cols = n_features // images_per_row
-#     display_grid = np.zeros((size * n_cols, images_per_row * size))
-#
-#     for col in range(n_cols):
-#         for row in range(images_per_row):
-#             channel_image = layer_activation[0,
-#                                              :, :,
-#                                              col * images_per_row + row]
-#             # Post-process the feature to make it visually palatable
-#             channel_image -= channel_image.mean()
-#             channel_image /= channel_image.std()
-#             channel_image *= 64
-#             channel_image += 128
-#             channel_image = np.clip(channel_image, 0, 255).astype('uint8')
-#             display_grid[col * size : (col + 1) * size,
-#                          row * size : (row + 1) * size] = channel_image
-#
-#     scale = 1. / size
-#     plt.figure(figsize=(scale * display_grid.shape[1],
-#                         scale * display_grid.shape[0]))
-#     plt.title(layer_name)
-#     plt.grid(False)
-#     # plt.imshow(display_grid, aspect='auto', cmap='viridis')
-#     plt.imshow(display_grid, aspect='auto', cmap='gray')
-#
-# plt.show()
-
-emotion_result = model.predict(original)
-print(emotion_result)
-true_index = np.argmax(emotion_result)
-print(true_index)
 
 
-out = model.output[:, true_index]
-last_conv_layer = model.get_layer('conv1_2')
-grads = K.gradients(out, last_conv_layer.output)[0]
-pooled_grads = K.mean(grads, axis=(0, 1, 2))
-iterate = K.function([model.input], [pooled_grads, last_conv_layer.output[0]])
-pooled_grads_value, conv_layer_output_value = iterate([original])
-for i in range(64):
-    conv_layer_output_value[:, :, i] *= pooled_grads_value[i]
-
-heatmap = np.mean(conv_layer_output_value, axis=-1)
-
-heatmap = np.maximum(heatmap, 0)
-heatmap /= np.max(heatmap)
-plt.matshow(heatmap)
+first_layer_activation = activations[1]
+print(first_layer_activation.shape)
+plt.matshow(first_layer_activation[0, :, :, 0], cmap='viridis')
 plt.show()
 
-heatmap = cv2.resize(heatmap, (48, 48))
-heatmap = np.uint8(255 * heatmap)
-heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+layer_names = []
+for layer in model.layers[:33]:
+    layer_names.append(layer.name)
+print(layer_names)
 
-cv2.imwrite('./heatmap.jpg', heatmap)
+images_per_row = 16
+
+for layer_name, layer_activation in zip(layer_names, activations):
+    if not layer_name.startswith('conv'):
+        continue
+    n_features = layer_activation.shape[-1]
+
+    size = layer_activation.shape[1]
+
+    n_cols = n_features // images_per_row
+    display_grid = np.zeros((size * n_cols, images_per_row * size))
+
+    for col in range(n_cols):
+        for row in range(images_per_row):
+            channel_image = layer_activation[0,
+                                             :, :,
+                                             col * images_per_row + row]
+            # Post-process the feature to make it visually palatable
+            channel_image -= channel_image.mean()
+            channel_image /= channel_image.std()
+            channel_image *= 64
+            channel_image += 128
+            channel_image = np.clip(channel_image, 0, 255).astype('uint8')
+            display_grid[col * size : (col + 1) * size,
+                         row * size : (row + 1) * size] = channel_image
+
+    scale = 1. / size
+    plt.figure(figsize=(scale * display_grid.shape[1],
+                        scale * display_grid.shape[0]))
+    plt.title(layer_name)
+    plt.grid(False)
+    plt.imshow(display_grid, aspect='auto', cmap='viridis')
+    # plt.imshow(display_grid, aspect='auto', cmap='gray')
+
+plt.show()
+
+
+# ----------------------- heat map ---------------------------------------------
+# emotion_result = model.predict(original)
+# print(emotion_result)
+# true_index = np.argmax(emotion_result)
+# print(true_index)
+#
+# print('type of original: {}'.format(type(original)))
+# print('type of original: {}'.format(original))
+#
+# out = model.output[:, true_index]
+# last_conv_layer = model.get_layer('conv1_1')
+# grads = K.gradients(out, last_conv_layer.output)[0]
+# pooled_grads = K.mean(grads, axis=(0, 1, 2))
+# iterate = K.function([model.input], [pooled_grads, last_conv_layer.output[0]])
+# pooled_grads_value, conv_layer_output_value = iterate([original])
+# for i in range(64):
+#     conv_layer_output_value[:, :, i] *= pooled_grads_value[i]
+#
+# heatmap = np.mean(conv_layer_output_value, axis=-1)
+#
+# heatmap = np.maximum(heatmap, 0)
+# heatmap /= np.max(heatmap)
+# plt.matshow(heatmap)
+# plt.show()
+#
+# # heatmap = cv2.resize(heatmap, (48, 48))
+# # heatmap = np.uint8(255 * heatmap)
+# # heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+# #
+# # plt.matshow(heatmap)
+# # plt.show()
+# #
+# # cv2.imwrite('./heatmap.jpg', heatmap)
+
+# ------------------------ heat map end ----------------------------------------
 

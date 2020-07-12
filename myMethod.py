@@ -186,34 +186,29 @@ def show_batch(dataset):
 def create_myModel():
     model = keras.models.Sequential([
         keras.Input(shape=(48, 48, 1)),
-        # Block 1
-        layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_1'),
-        # layers.Conv2D(64, (7, 7), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv1_2'),
+
         layers.BatchNormalization(),
+        layers.Conv2D(64, (3, 3), activation='relu', padding='same',
+                      name='conv1_1'),
 
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool1_1'),
         # Block 2
-        layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_1'),
-        # layers.Conv2D(128, (5, 5), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv2_2'),
         layers.BatchNormalization(),
+        layers.Conv2D(128, (3, 3), activation='relu', padding='same',
+                      name='conv2_1'),
 
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool2_1'),
-
-
         # Block 3
-        layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_1'),
-        # layers.Conv2D(256, (3, 3), kernel_regularizer=keras.regularizers.l2(0.001), activation='relu', padding='same', name='conv3_2'),
         layers.BatchNormalization(),
+        layers.Conv2D(256, (3, 3), activation='relu', padding='same',
+                      name='conv3_1'),
 
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool3_1'),
         # --------------------Full conact layer --------------------------------
         layers.Flatten(),
-        layers.Dense(1024, activation='relu', name='fc6'),
+        layers.Dense(1024, activation='relu', name='fc1'),
         layers.Dropout(0.5),
-        # layers.Dense(256, activation='relu', name='fc7'),
-        # layers.Dropout(0.5),
-        # layers.BatchNormalization(),
-        layers.Dense(7, activation='softmax', name='fc8')
+        layers.Dense(7, activation='softmax', name='fc2')
     ])
     return model
 
@@ -221,6 +216,7 @@ def create_myVGG():
     model = keras.models.Sequential([
         keras.Input(shape=(48, 48, 1)),
         # block1
+        layers.BatchNormalization(),
         layers.Conv2D(64, (3, 3), activation='relu', padding='same',
                       name='conv1_1'),
         layers.BatchNormalization(),
@@ -259,6 +255,7 @@ def create_myVGG():
         layers.BatchNormalization(),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
                       name='conv4_2'),
+        layers.BatchNormalization(),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
                       name='conv4_3'),
         layers.BatchNormalization(),
@@ -273,19 +270,20 @@ def create_myVGG():
         layers.BatchNormalization(),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
                       name='conv5_2'),
+        layers.BatchNormalization(),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
                       name='conv5_3'),
         layers.BatchNormalization(),
         layers.Conv2D(512, (3, 3), activation='relu', padding='same',
                       name='conv5_4'),
-        layers.BatchNormalization(),
         layers.MaxPooling2D(2, strides=2, padding='same', name='pool5_1'),
 
         layers.AveragePooling2D(pool_size=1, strides=1, name='ap2d'),
 
         layers.Flatten(),
-        layers.Dense(512, activation='relu', name='fc1'),
-        layers.Dropout(0.5),
+        layers.Dense(1024, activation='relu', name='fc1'),
+        # layers.Dropout(0.5),
+        layers.BatchNormalization(),
         layers.Dense(7, activation='softmax', name='fc2')
 
     ])

@@ -10,17 +10,19 @@ import argparse
 # use method:
 # python predict.py --model myModel --type whole_history_epoch
 # python predict.py --model myVGG --type whole --load_path /Users/wyc/Downloads/cp-0560.ckpt
+# python predict.py --model myModel --type whole_history_epoch --train_name withoutFirstBN --total_epoch 171
 
 
 parser = argparse.ArgumentParser(description='predicted with confusion matrix')
 parser.add_argument('--model', type=str, default='myModel')
 parser.add_argument('--type', type=str, default='whole')
 parser.add_argument('--load_path', type=str)
-parser.add_argument('--train_history', type=str, default='./train_history/cp-')
+parser.add_argument('--train_name', type=str, default='newTrain')
+parser.add_argument('--total_epoch', type=int, default=600)
 # parser.add_argument('--gpus', type=int, default=1)
 
 args = parser.parse_args()
-
+max_epoch = args.total_epoch
 
 test_private_path = "./data/FER2013/private_test.csv"
 private_test_data = myMethod.get_dataset_test(test_private_path)
@@ -29,9 +31,7 @@ private_test_data = private_test_data.map(myMethod.preprocess_DAtestdata)
 # get standard result
 correct_answer = np.loadtxt(test_private_path, dtype=np.int, delimiter=',',
                             skiprows=1, usecols=(0), encoding='utf-8')
-print(type(correct_answer))
-print(correct_answer.shape)
-print(correct_answer)
+
 # correct_answer = correct_answer.repeat(10)
 
 if args.model == 'myVGG':
@@ -43,12 +43,6 @@ model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
                   metrics=["accuracy"])
 
-
-# xxx = next(iter(private_test_data))
-# original = xxx[0]
-# emotion = xxx[1]
-# print(original.shape)
-# print(emotion.shape)
 
 
 def get_acc_predict(load_path):
@@ -70,9 +64,11 @@ def get_acc_predict(load_path):
     return y
 
 
-def get_history_acc(history_path):
-    for i in range(10, 601, 10):
-        load_path = history_path + str(i).zfill(4) + '.ckpt'
+def get_history_acc(testname):
+    max_acc = 0
+    best_epoch = 0
+    for epoch in range(10, max_epoch, 10):
+        load_path = "./train_history/" + testname + '/cp-' + str(epoch).zfill(4) + '.ckpt'
         model.load_weights(load_path)
         x = model.predict(private_test_data,
                           steps=TOTAL_TEST // BATCH_SIZE_TEST_DA)
@@ -86,9 +82,12 @@ def get_history_acc(history_path):
         z = y - correct_answer
         sum = np.sum(z == 0)
 
-        print('sum: {}'.format(sum))
-        print('acc: {}'.format(sum / 3589))
+        if sum / 3589 > max_acc:
+            max_acc = sum / 3589
+            best_epoch = epoch
 
+        print('epoch: {}, correct num: {}, acc: {}'.format(epoch,sum, sum/3589))
+    print('epoch: {} -> max acc: {}'.format(best_epoch, max_acc))
 
 if args.type == 'whole':
     load_path = args.load_path
@@ -97,5 +96,5 @@ if args.type == 'whole':
 
 
 if args.type == 'whole_history_epoch':
-    history_path = args.train_history
-    get_history_acc(history_path)
+    testname = args.train_name
+    get_history_acc(testname)

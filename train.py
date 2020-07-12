@@ -7,9 +7,11 @@ import tensorflow as tf
 import os
 import argparse
 
+# python train.py --gpus 1 --model myModel --train_name fc1024
 parser = argparse.ArgumentParser(description='train args')
-parser.add_argument('--gups', type=int, default=1)
+parser.add_argument('--gpus', type=int, default=1)
 parser.add_argument('--model', type=str, default='myModel')
+parser.add_argument('--train_name', type=str, default='newTrain')
 
 args = parser.parse_args()
 
@@ -80,7 +82,7 @@ logdir = "./logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir)
 
 # Save checkpoints
-checkpoint_path = "./train_history/cp-{epoch:04d}.ckpt"
+checkpoint_path = "./train_history/" + args.train_name + '/' + "cp-{epoch:04d}.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
 cp_callback = keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_path,
@@ -109,7 +111,7 @@ def singleGPU():
     model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE_TRAIN)
 
 def multiGPUs():
-    GPUS = args.gups
+    GPUS = args.gpus
     strategy = tf.distribute.MirroredStrategy()
 
     with strategy.scope():
@@ -129,7 +131,7 @@ def multiGPUs():
     model.evaluate(private_test_data, steps=TOTAL_TEST // BATCH_SIZE_TRAIN // GPUS)
 
 def trainModel():
-    if args.gups == 1:
+    if args.gpus == 1:
         singleGPU()
     else:
         multiGPUs()
